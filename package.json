@@ -1,0 +1,25 @@
+{
+  "name": "tap-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon",
+    "lint": "eslint .",
+    "build": "tsc"
+  },
+  "author": "FReyeSFT",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "~22.10.1",
+    "ts-node": "~10.9.2",
+    "typescript": "~5.7.2"
+  },
+  "dependencies": {
+    "chalk": "~5.3.0",
+    "discord.js": "~14.16.3",
+    "dotenv": "~16.4.5",
+    "nodemon": "~3.1.7"
+  }
+}
