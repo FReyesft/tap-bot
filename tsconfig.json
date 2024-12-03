@@ -25,7 +25,7 @@
 	],
 	"include": [
 			"./**/*.ts"
-, "src/index.ts"	],
+, "src/index.ts", "src/deploy-commands.js"	],
 	"exclude": [
 			"node_modules",
 			"dist"

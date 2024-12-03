@@ -1,38 +1,51 @@
-import { Client, Events, GatewayIntentBits, CommandInteraction, Interaction } from 'discord.js';
-import { config } from './config/environment-config';
-import { getCommands } from './commands/commands';
+import fs from 'node:fs';
+import path from 'node:path';
 import chalk from 'chalk';
+import { Client, Collection, GatewayIntentBits, Interaction, RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
+import { config } from './config/environment-config';
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+interface Command {
+    data: RESTPostAPIChatInputApplicationCommandsJSONBody;
+    execute: (interaction: Interaction) => Promise<void>;
+}
 
-const registerCommands = async (client: Client) => {
-    try {
-        const commands = getCommands();
-        for (const cmd of commands) {
-            await client.application?.commands.create(cmd.data.toJSON());
-            console.log(chalk.bgBlue(`Comando registrado: ${cmd.data.name}`));
+interface ExtendedClient extends Client {
+    commands: Collection<string, Command>;
+}
+
+const client: ExtendedClient = new Client({ intents: [GatewayIntentBits.Guilds] }) as ExtendedClient;
+
+client.commands = new Collection();
+
+const foldersPath = path.join(__dirname, 'commands');
+const commandFolders = fs.readdirSync(foldersPath);
+
+for (const folder of commandFolders) {
+    const commandsPath = path.join(foldersPath, folder);
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
+    for (const file of commandFiles) {
+        const filePath = path.join(commandsPath, file);
+        const command: Command = require(filePath);
+        if ('data' in command && 'execute' in command) {
+            client.commands.set(command.data.name, command);
+            console.log(chalk.green(`✅ Loaded command: ${chalk.bold(command.data.name)}`));
+        } else {
+            console.warn(chalk.yellow(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`));
         }
-    } catch (error) {
-        console.error(chalk.bgRed("Error al registrar los comandos: "), error);
     }
-};
+}
 
-client.on(Events.InteractionCreate, async (interaction: Interaction) => {
-    if (interaction.isCommand()) {
-        const { commandName } = interaction as CommandInteraction;
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.ts'));
 
-        const commands = getCommands();
-        const command = commands.find(cmd => cmd.data.name === commandName);
-        if (command) {
-            await command.execute(interaction);
-        }
-    }
-});
-
-client.once(Events.ClientReady, async () => {
-    console.log(chalk.bgGreen.bold(`Ready! Logged in as ${client.user?.tag}`));
-    
-    await registerCommands(client);
-});
+for (const file of eventFiles) {
+	const filePath = path.join(eventsPath, file);
+	const event = require(filePath);
+	if (event.once) {
+		client.once(event.name, (...args) => event.execute(...args));
+	} else {
+		client.on(event.name, (...args) => event.execute(...args));
+	}
+}
 
 client.login(config.BOT_TOKEN);
