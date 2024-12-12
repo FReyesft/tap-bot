@@ -1,7 +1,7 @@
-import { SlashCommandBuilder, CommandInteraction, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { format } from '@formkit/tempo';
 
-const getUserResponse = (interaction: CommandInteraction): EmbedBuilder => {
+const getUserResponse = (interaction: ChatInputCommandInteraction): EmbedBuilder => {
 	const user = interaction.user;
 	const member = interaction.guild?.members.cache.get(user.id);
 
@@ -38,7 +38,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('user')
 		.setDescription('Proporciona información detallada del usuario.'),
-	async execute(interaction: CommandInteraction) {
+	async execute(interaction: ChatInputCommandInteraction) {
 		const embed = getUserResponse(interaction);
 		await interaction.reply({ embeds: [embed] });
 	},

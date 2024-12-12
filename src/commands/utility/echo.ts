@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChannelType, CommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, ChannelType, ChatInputCommandInteraction, TextChannel, EmbedBuilder } from 'discord.js';
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -7,7 +7,7 @@ module.exports = {
 		.addStringOption(option =>
 			option.setName('input')
 				.setDescription('The input to echo back')
-				.setMaxLength(2_000))
+				.setMaxLength(2000))
 		.addChannelOption(option =>
 			option.setName('channel')
 				.setDescription('The channel to echo into')
@@ -15,7 +15,24 @@ module.exports = {
 		.addBooleanOption(option =>
 			option.setName('embed')
 				.setDescription('Whether or not the echo should be embedded')),
-	async execute(interaction: CommandInteraction) {
-		console.log(interaction)
-	}
-}
+	async execute(interaction: ChatInputCommandInteraction) {
+		const input = interaction.options.getString('input');
+		const channel = interaction.options.getChannel('channel');
+		const embed = interaction.options.getBoolean('embed');
+
+		const textChannel = channel as TextChannel;
+		if (!textChannel || !textChannel.isTextBased()) {
+			await interaction.reply({ content: 'Unable to send messages to the specified channel!', ephemeral: true });
+			return;
+		}
+
+		if (embed) {
+			const embedBuilded = new EmbedBuilder()
+				.setColor('#0099ff')
+				.setDescription(input)
+			await textChannel.send({ embeds: [embedBuilded] });
+		} else {
+			await textChannel.send(input!);
+		}
+	},
+};
