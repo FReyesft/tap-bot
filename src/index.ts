@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
-import { Client, Collection, GatewayIntentBits, Interaction, RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
+import { Client, Collection, GatewayIntentBits, Interaction, REST, RESTPostAPIChatInputApplicationCommandsJSONBody, Routes } from 'discord.js';
 import { config } from './config/environment-config';
 
 interface Command {
@@ -16,6 +16,20 @@ interface ExtendedClient extends Client {
 const client: ExtendedClient = new Client({ intents: [GatewayIntentBits.Guilds] }) as ExtendedClient;
 
 client.commands = new Collection();
+
+const deleteCommands = async () => {
+    const rest = new REST().setToken(config.BOT_TOKEN!);
+
+    await rest.put(Routes.applicationGuildCommands(config.APPLICATION_ID!, config.GUILD_ID!), { body: [] })
+        .then(() => console.log(chalk.bgRed('🚯Successfully deleted all guild commands.')))
+        .catch(console.error);
+    
+    await rest.put(Routes.applicationCommands(config.APPLICATION_ID!), { body: [] })
+        .then(() => console.log(chalk.bgRed('🚯 Successfully deleted all application commands.')))
+        .catch(console.error);
+}
+
+deleteCommands();
 
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
@@ -39,13 +53,13 @@ const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.ts'));
 
 for (const file of eventFiles) {
-	const filePath = path.join(eventsPath, file);
-	const event = require(filePath);
-	if (event.once) {
-		client.once(event.name, (...args) => event.execute(...args));
-	} else {
-		client.on(event.name, (...args) => event.execute(...args));
-	}
+    const filePath = path.join(eventsPath, file);
+    const event = require(filePath);
+    if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args));
+    } else {
+        client.on(event.name, (...args) => event.execute(...args));
+    }
 }
 
 client.login(config.BOT_TOKEN);

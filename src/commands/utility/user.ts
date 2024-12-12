@@ -19,7 +19,7 @@ const getUserResponse = (interaction: CommandInteraction): EmbedBuilder => {
 
 	const embed = new EmbedBuilder()
 		.setColor('#0099ff')
-		.setTitle(`Información del Usuario: ${user.username}`)
+		.setTitle(`Usuario: ${user.username}`)
 		.setThumbnail(user.displayAvatarURL())
 		.addFields(
 			{ name: '🆔 ID:', value: user.id, inline: false },
