@@ -17,6 +17,7 @@
     "typescript": "~5.7.2"
   },
   "dependencies": {
+    "@discordjs/voice": "^0.18.0",
     "@formkit/tempo": "^0.1.2",
     "chalk": "~5.3.0",
     "discord.js": "~14.16.3",
