@@ -6,7 +6,8 @@ module.exports = {
 	async execute(interaction: any) {
 		if (!interaction.isChatInputCommand()) return;
 
-		const command = interaction.client.commands.get(interaction.commandName);
+		const client = interaction.client;
+		const command = client.commands.get(interaction.commandName);
 
 		if (!command) {
 			console.error(`No command matching ${interaction.commandName} was found.`);
@@ -14,10 +15,17 @@ module.exports = {
 		}
 
 		try {
-			console.log(chalk.blue(chalk.bgBlue.white.bold(`✅ ${interaction.commandName} command executed by ${interaction.user.globalName}`)));
+			console.log(chalk.blue(chalk.bgBlue.white.bold(`✅ ${interaction.commandName} command executed by ${interaction.user.username}`)));
+
+			if (interaction.replied || interaction.deferred) {
+				console.log('Interaction has already been acknowledged, skipping reply.');
+				return;
+			}
+
 			await command.execute(interaction);
 		} catch (error) {
 			console.error(error);
+
 			if (interaction.replied || interaction.deferred) {
 				await interaction.followUp({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
 			} else {

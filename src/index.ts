@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import figlet from 'figlet';
 import { Client, Collection, GatewayIntentBits, Interaction, REST, RESTPostAPIChatInputApplicationCommandsJSONBody, Routes } from 'discord.js';
 import { config } from './config/environment-config';
+import { Player } from 'discord-player';
 
 interface Command {
     data: RESTPostAPIChatInputApplicationCommandsJSONBody;
@@ -12,9 +13,24 @@ interface Command {
 
 interface ExtendedClient extends Client {
     commands: Collection<string, Command>;
+    player: Player,
 }
 
-const client: ExtendedClient = new Client({ intents: [GatewayIntentBits.Guilds] }) as ExtendedClient;
+const client: ExtendedClient = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.MessageContent,
+    ],
+}) as ExtendedClient;
+
+client.player = new Player(client, {
+    ytdlOptions: {
+        quality: 'highestaudio',
+        highWaterMark: 1 << 25,
+    },
+    blockExtractors: []
+});
 
 client.commands = new Collection();
 
@@ -86,7 +102,7 @@ const registerEvents = () => {
 };
 
 const displayBanner = () => {
-    console.log(chalk.blueBright.bold(figlet.textSync('Bot Initialized', { horizontalLayout: 'default' })));
+    console.log(chalk.blueBright.bold(figlet.textSync('TAP BOT', { horizontalLayout: 'default' })));
     console.log(chalk.whiteBright('🚀 Starting initialization process...\n'));
 };
 
