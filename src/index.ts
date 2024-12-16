@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
+import figlet from 'figlet';
 import { Client, Collection, GatewayIntentBits, Interaction, REST, RESTPostAPIChatInputApplicationCommandsJSONBody, Routes } from 'discord.js';
 import { config } from './config/environment-config';
 
@@ -22,16 +23,16 @@ const deleteCommands = async () => {
 
     try {
         await rest.put(Routes.applicationGuildCommands(config.APPLICATION_ID!, config.GUILD_ID!), { body: [] });
-        console.log(chalk.bgRed('🚯 Successfully deleted all guild commands.'));
+        console.log(chalk.bgRed.bold.white('🚯 Successfully deleted all guild commands.'));
     } catch (error) {
-        console.error(chalk.red('❌ Error deleting guild commands:'), error);
+        console.error(chalk.bgRed.bold.white('❌ Error deleting guild commands:'), error);
     }
 
     try {
         await rest.put(Routes.applicationCommands(config.APPLICATION_ID!), { body: [] });
-        console.log(chalk.bgRed('🚯 Successfully deleted all application commands.'));
+        console.log(chalk.bgRed.bold.white('🚯 Successfully deleted all application commands.'));
     } catch (error) {
-        console.error(chalk.red('❌ Error deleting application commands:'), error);
+        console.error(chalk.bgRed.bold.white('❌ Error deleting application commands:'), error);
     }
 };
 
@@ -42,6 +43,7 @@ const registerCommands = async () => {
     const foldersPath = path.join(__dirname, 'commands');
     const commandFolders = fs.readdirSync(foldersPath);
 
+    console.log(chalk.cyan.bold('\n📂 Loading commands...'));
     for (const folder of commandFolders) {
         const commandsPath = path.join(foldersPath, folder);
         const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
@@ -50,19 +52,19 @@ const registerCommands = async () => {
             const command: Command = require(filePath);
             if ('data' in command && 'execute' in command) {
                 client.commands.set(command.data.name, command);
-                commands.push(command.data); // Preparar comandos para registrar
-                console.log(chalk.green(`✅ Loaded command: ${chalk.bold(command.data.name)}`));
+                commands.push(command.data);
+                console.log(chalk.greenBright(`✅ Loaded command: ${chalk.bold(command.data.name)}`));
             } else {
-                console.warn(chalk.yellow(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`));
+                console.warn(chalk.yellowBright(`[⚠️ Warning] Missing "data" or "execute" in command: ${chalk.italic(filePath)}`));
             }
         }
     }
 
     try {
         await rest.put(Routes.applicationGuildCommands(config.APPLICATION_ID!, config.GUILD_ID!), { body: commands });
-        console.log(chalk.bgGreen('✅ Successfully registered all guild commands.'));
+        console.log(chalk.bgGreen.black('✅ Successfully registered all guild commands.'));
     } catch (error) {
-        console.error(chalk.red('❌ Error registering guild commands:'), error);
+        console.error(chalk.bgRed.bold.white('❌ Error registering guild commands:'), error);
     }
 };
 
@@ -70,6 +72,7 @@ const registerEvents = () => {
     const eventsPath = path.join(__dirname, 'events');
     const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.ts'));
 
+    console.log(chalk.cyan.bold('\n🎉 Loading events...'));
     for (const file of eventFiles) {
         const filePath = path.join(eventsPath, file);
         const event = require(filePath);
@@ -78,19 +81,27 @@ const registerEvents = () => {
         } else {
             client.on(event.name, (...args) => event.execute(...args));
         }
-        console.log(chalk.green(`✅ Loaded event: ${chalk.bold(event.name)}`));
+        console.log(chalk.greenBright(`✅ Loaded event: ${chalk.bold(event.name)}`));
     }
 };
 
+const displayBanner = () => {
+    console.log(chalk.blueBright.bold(figlet.textSync('Bot Initialized', { horizontalLayout: 'default' })));
+    console.log(chalk.whiteBright('🚀 Starting initialization process...\n'));
+};
+
 const createCommandsAndEvents = async () => {
-    console.log(chalk.blue('🔄 Starting command and event initialization...'));
+    displayBanner();
+    console.log(chalk.yellowBright('🔄 Initializing commands and events...\n'));
     await deleteCommands();
     await registerCommands();
     registerEvents();
     client.login(config.BOT_TOKEN).then(() => {
-        console.log(chalk.bgGreen('🤖 Bot is now online!'));
+        console.log(chalk.bgGreen.bold.white('\n🤖 Bot is now online! Ready to serve!'));
+        console.log(chalk.greenBright(`📅 Date: ${new Date().toLocaleString()}`));
+        console.log(chalk.blueBright(`📡 Connected to: ${client.guilds.cache.size} servers\n`));
     }).catch(error => {
-        console.error(chalk.bgRed('❌ Error starting bot:'), error);
+        console.error(chalk.bgRed.bold.white('❌ Error starting bot:'), error);
     });
 };
 
